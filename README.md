@@ -5,6 +5,7 @@ resulting fingerings on a guitar in **Orkney tuning** (C-G-D-G-C-D), drawn
 from an upside-down (lefty-flipped) playing perspective — treble strings
 on top, bass on bottom.
 
+
 ## Features
 
 - Type in a sequence of notes via on-screen buttons.
