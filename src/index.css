@@ -1,0 +1,10 @@
+:root {
+  color-scheme: dark;
+}
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  background: #161616;
+  min-height: 100%;
+}
+* { box-sizing: border-box; }
