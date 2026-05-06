@@ -51,6 +51,29 @@ button.ghost { background: transparent; border-color: #555; color: #aaa; }
 .octave-btn small { color: #aaa; font-weight: 400; }
 .octave-btn.selected small { color: #cde; }
 
+.songs-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: #1f1f1f;
+  border: 1px solid #2e2e2e;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 14px;
+}
+.songs-bar .spacer { flex: 1; min-width: 8px; }
+.songs-bar select { min-width: 180px; }
+.flash {
+  margin-left: 8px;
+  padding: 4px 10px;
+  background: #2a3d2a;
+  border: 1px solid #3a5a3a;
+  color: #cde;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
 .chip sub {
   font-size: 0.7em;
   color: #aac;
