@@ -112,6 +112,13 @@ export default function App() {
     }));
   }
 
+  function toggleHelp() {
+    setState(prev => ({
+      ...prev,
+      prefs: { ...prev.prefs, helpOpen: !prev.prefs.helpOpen },
+    }));
+  }
+
   function addNote(label: string) {
     const pc = parseNoteName(label);
     const midi = midiOf(pc, octave);
@@ -265,6 +272,28 @@ export default function App() {
   return (
     <div className="app">
       <h1>Guitar Transposer</h1>
+
+      <section className="help-panel">
+        <button className="help-toggle" onClick={toggleHelp} aria-expanded={state.prefs.helpOpen}>
+          <span className="help-arrow">{state.prefs.helpOpen ? '▾' : '▸'}</span> How to use
+        </button>
+        {state.prefs.helpOpen && (
+          <div className="help-content">
+            <ol>
+              <li>Pick a song from the dropdown above, or click <strong>+ New</strong>.</li>
+              <li>Choose a <strong>tuning</strong> (Standard, DADGAD, or Orkney). Use the <strong>Diagram</strong> button if you want to flip the fretboard upside-down.</li>
+              <li>Set the <strong>From key</strong> — the key the original music is in.</li>
+              <li>Choose an <strong>octave</strong> (Low / Mid / High), then click note buttons to build the sequence. Notes that don't fit on the chosen octave are greyed out. Use the <strong>×</strong> on a chip to remove a note.</li>
+              <li>Set the <strong>To key</strong>. The transposed sequence appears just below.</li>
+              <li>Click any transposed note to see its fret positions on the diagram. Click a dot to lock that fingering in (a small <code>s#f#</code> tag appears on the chip).</li>
+              <li>Press <strong>▶ Play</strong> to step through the locked positions at the chosen tempo.</li>
+            </ol>
+            <p className="muted small">
+              <strong>Saving:</strong> songs auto-save in your browser. <strong>Export</strong> downloads the current song as a <code>.json</code> file you can keep or share; <strong>Import</strong> loads one back.
+            </p>
+          </div>
+        )}
+      </section>
 
       <section className="songs-bar">
         <label>Song:</label>

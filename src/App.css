@@ -74,6 +74,41 @@ button.ghost { background: transparent; border-color: #555; color: #aaa; }
   font-size: 13px;
 }
 
+.help-panel {
+  background: #1f1f1f;
+  border: 1px solid #2e2e2e;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 14px;
+}
+.help-toggle {
+  background: transparent;
+  border: none;
+  color: #cde;
+  font-weight: 600;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+.help-toggle:hover { background: transparent; color: #fff; }
+.help-arrow { display: inline-block; width: 14px; color: #88a; }
+.help-content {
+  padding: 4px 4px 8px 4px;
+  font-size: 14px;
+  color: #ddd;
+  line-height: 1.55;
+}
+.help-content ol { margin: 6px 0 8px 22px; padding: 0; }
+.help-content li { margin-bottom: 4px; }
+.help-content code {
+  background: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+.help-content p { margin-top: 8px; }
+
 .chip sub {
   font-size: 0.7em;
   color: #aac;

@@ -23,7 +23,7 @@ export interface AppStateV1 {
   schemaVersion: 1;
   songs: SongV1[];
   currentSongId: string | null;
-  prefs: { orientationFlipped: boolean };
+  prefs: { orientationFlipped: boolean; helpOpen: boolean };
 }
 
 export function newSong(opts: { name?: string; tuningId?: TuningId } = {}): SongV1 {
@@ -49,7 +49,8 @@ export function defaultAppState(): AppStateV1 {
     schemaVersion: 1,
     songs: [song],
     currentSongId: song.id,
-    prefs: { orientationFlipped: false },
+    // New users see the help panel open by default.
+    prefs: { orientationFlipped: false, helpOpen: true },
   };
 }
 
@@ -59,7 +60,15 @@ export function loadAppState(): AppStateV1 {
     if (!raw) return defaultAppState();
     const parsed = JSON.parse(raw);
     if (parsed?.schemaVersion === 1 && Array.isArray(parsed.songs) && parsed.songs.length > 0) {
-      return parsed as AppStateV1;
+      // Fill in any missing pref fields. Existing users default to helpOpen=false
+      // since they've already used the app and don't need it expanded again.
+      return {
+        ...parsed,
+        prefs: {
+          orientationFlipped: parsed.prefs?.orientationFlipped ?? false,
+          helpOpen: parsed.prefs?.helpOpen ?? false,
+        },
+      } as AppStateV1;
     }
   } catch (err) {
     console.warn('Could not load saved state — starting fresh.', err);
