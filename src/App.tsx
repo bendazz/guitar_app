@@ -44,6 +44,7 @@ export default function App() {
 
   // Ephemeral UI state — not saved.
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [octave, setOctave] = useState<number>(3);
   const [playStep, setPlayStep] = useState<number | null>(null);
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
@@ -102,6 +103,7 @@ export default function App() {
     // across tunings, so clear them on tuning change.
     updateCurrentSong(s => ({ ...s, tuningId: id, chosen: {} }));
     setSelectedIdx(null);
+    setEditingIdx(null);
     stopPlayback();
   }
 
@@ -123,7 +125,27 @@ export default function App() {
     const pc = parseNoteName(label);
     const midi = midiOf(pc, octave);
     if (midi < range.min || midi > range.max) return;
-    updateCurrentSong(s => ({ ...s, notes: [...s.notes, midi] }));
+    if (editingIdx !== null) {
+      // Replace the note at the edit target. Clear its locked fingering since
+      // the position only made sense for the previous note.
+      const idx = editingIdx;
+      updateCurrentSong(s => {
+        const notes = s.notes.slice();
+        notes[idx] = midi;
+        const chosen = { ...s.chosen };
+        delete chosen[idx];
+        return { ...s, notes, chosen };
+      });
+      setEditingIdx(null);
+    } else {
+      updateCurrentSong(s => ({ ...s, notes: [...s.notes, midi] }));
+    }
+  }
+  function startEdit(i: number) {
+    if (editingIdx === i) { setEditingIdx(null); return; }
+    setEditingIdx(i);
+    setOctave(octaveOf(currentSong.notes[i]));
+    stopPlayback();
   }
   function deleteAt(i: number) {
     updateCurrentSong(s => {
@@ -137,10 +159,13 @@ export default function App() {
       return { ...s, notes: newNotes, chosen: newChosen };
     });
     setSelectedIdx(null);
+    if (editingIdx === i) setEditingIdx(null);
+    else if (editingIdx !== null && editingIdx > i) setEditingIdx(editingIdx - 1);
   }
   function clearAll() {
     updateCurrentSong(s => ({ ...s, notes: [], chosen: {} }));
     setSelectedIdx(null);
+    setEditingIdx(null);
     stopPlayback();
   }
   function pickPosition(pos: FretPosition) {
@@ -162,6 +187,7 @@ export default function App() {
     });
     setState(s => ({ ...s, songs: [...s.songs, song], currentSongId: song.id }));
     setSelectedIdx(null);
+    setEditingIdx(null);
     stopPlayback();
   }
 
@@ -169,6 +195,7 @@ export default function App() {
     if (id === currentSong.id) return;
     setState(s => ({ ...s, currentSongId: id }));
     setSelectedIdx(null);
+    setEditingIdx(null);
     stopPlayback();
   }
 
@@ -190,6 +217,7 @@ export default function App() {
     };
     setState(s => ({ ...s, songs: [...s.songs, copy], currentSongId: copy.id }));
     setSelectedIdx(null);
+    setEditingIdx(null);
     stopPlayback();
   }
 
@@ -204,6 +232,7 @@ export default function App() {
       return { ...s, songs: remaining, currentSongId: remaining[0].id };
     });
     setSelectedIdx(null);
+    setEditingIdx(null);
     stopPlayback();
   }
 
@@ -228,6 +257,7 @@ export default function App() {
       const song = parseImportedSong(text);
       setState(s => ({ ...s, songs: [...s.songs, song], currentSongId: song.id }));
       setSelectedIdx(null);
+      setEditingIdx(null);
       stopPlayback();
       showFlash(`Imported "${song.name}".`);
     } catch (err) {
@@ -283,7 +313,7 @@ export default function App() {
               <li>Pick a song from the dropdown above, or click <strong>+ New</strong>.</li>
               <li>Choose a <strong>tuning</strong> (Standard, DADGAD, or Orkney). Use the <strong>Diagram</strong> button if you want to flip the fretboard upside-down.</li>
               <li>Set the <strong>From key</strong> — the key the original music is in.</li>
-              <li>Choose an <strong>octave</strong> (Low / Mid / High), then click note buttons to build the sequence. Notes that don't fit on the chosen octave are greyed out. Use the <strong>×</strong> on a chip to remove a note.</li>
+              <li>Choose an <strong>octave</strong> (Low / Mid / High), then click note buttons to build the sequence. Notes that don't fit on the chosen octave are greyed out. Use the <strong>×</strong> on a chip to remove a note, or click the chip itself to edit it (the next note button replaces it).</li>
               <li>Set the <strong>To key</strong>. The transposed sequence appears just below.</li>
               <li>Click any transposed note to see its fret positions on the diagram. Click a dot to lock that fingering in (a small <code>s#f#</code> tag appears on the chip).</li>
               <li>Press <strong>▶ Play</strong> to step through the locked positions at the chosen tempo.</li>
@@ -380,16 +410,34 @@ export default function App() {
         <h3>Sequence ({currentSong.sourceKey})</h3>
         <div className="chips">
           {currentSong.notes.length === 0 && <span className="muted">no notes yet</span>}
-          {currentSong.notes.map((midi, i) => (
-            <span key={i} className="chip">
-              <NoteLabel midi={midi} keyName={currentSong.sourceKey} />
-              <button className="chip-x" onClick={() => deleteAt(i)} title="remove">×</button>
-            </span>
-          ))}
+          {currentSong.notes.map((midi, i) => {
+            const isEditing = i === editingIdx;
+            const cls = ['chip', 'clickable', isEditing && 'editing'].filter(Boolean).join(' ');
+            return (
+              <span
+                key={i}
+                className={cls}
+                onClick={() => startEdit(i)}
+                title={isEditing ? 'Editing — click a note to replace, or click again to cancel' : 'Click to edit'}
+              >
+                <NoteLabel midi={midi} keyName={currentSong.sourceKey} />
+                <button
+                  className="chip-x"
+                  onClick={e => { e.stopPropagation(); deleteAt(i); }}
+                  title="remove"
+                >×</button>
+              </span>
+            );
+          })}
           {currentSong.notes.length > 0 && (
             <button className="ghost" onClick={clearAll}>clear all</button>
           )}
         </div>
+        {editingIdx !== null && (
+          <p className="muted small" style={{ marginTop: 4 }}>
+            Editing note {editingIdx + 1} — pick an octave + note to replace it, or click the chip again to cancel.
+          </p>
+        )}
       </section>
 
       <section>
